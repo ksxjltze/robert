@@ -2,6 +2,19 @@ var Discord = require('discord.io');
 var logger = require('winston');
 
 require('dotenv').config();
+const http = require('http');
+port = 8080
+
+const server = http.createServer((req, res) => {
+// Set the response HTTP header with HTTP status and Content type
+res.writeHead(200, {'Content-Type': 'text/plain'});
+// Send the response body "Hello World"
+res.end('Just for testing purposes\n');
+});
+
+server.listen(port, () => {
+console.log('Hello world listening on port', port);
+});
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
