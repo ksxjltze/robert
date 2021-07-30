@@ -3,7 +3,7 @@ var logger = require('winston');
 
 require('dotenv').config();
 const http = require('http');
-port = 8080;
+const port = process.env.PORT;
 
 const server = http.createServer((req, res) => {
     res.statusCode = 200;
