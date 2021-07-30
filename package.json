@@ -9,5 +9,8 @@
         "dotenv": "^10.0.0",
         "node": "^16.6.0",
         "winston": "^3.3.3"
-    }
+    },
+    "scripts": {
+        "start": "node bot.js"
+      }
 }
