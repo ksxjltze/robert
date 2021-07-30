@@ -1,3 +1,6 @@
+#Token
+auth.json*
+
 # Logs
 logs
 *.log
