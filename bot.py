@@ -20,7 +20,7 @@ the_time = datetime.now(tz=timezone)
 
 reminder_channels = []
 
-@tasks.loop(hours = 1)
+@tasks.loop(hours = 2)
 async def called_once_a_day():
     for guild in bot.guilds:
         print(f"Connected to guild '{guild.name}'")
@@ -42,7 +42,7 @@ async def called_once_a_day():
     for reminder in reminder_channels:        
         message_channel = reminder["channel"]
         print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name}.")
-        #await message_channel.send("How's the progress over here?")
+        await message_channel.send("How's the progress over here?")
 
 @called_once_a_day.before_loop
 async def before():
