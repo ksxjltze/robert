@@ -11,21 +11,23 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-bot = commands.Bot(command_prefix='!')
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix='/', intents = intents)
 timezone = timezone(timedelta(hours=8))
 delay = timedelta(0, 0)
+hour_interval = 2
+
+progress_string = "How's the progress over here?"
 
 the_time = datetime.now(tz=timezone)
 #reminder_time = datetime(the_time.year, the_time.month, the_time.day, 20, 55, 0, 0, timezone)
 
 reminder_channels = []
 
-@tasks.loop(hours = 2)
-async def called_once_a_day():
-    for guild in bot.guilds:
-        print(f"Connected to guild '{guild.name}'")
-        reminder_channels.append({"guild" : guild, "channel" : get(guild.channels, name='general')})
-
+@tasks.loop(hours = hour_interval)
+async def hows_the_progress():
     current_time = datetime.now(tz=timezone)
     reminder_time = current_time + delay
     time_until_reminder = reminder_time - current_time
@@ -42,22 +44,52 @@ async def called_once_a_day():
     for reminder in reminder_channels:        
         message_channel = reminder["channel"]
         print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name}.")
-        await message_channel.send("How's the progress over here?")
+        #await message_channel.send(progress_string)
 
-@called_once_a_day.before_loop
+@hows_the_progress.before_loop
 async def before():
     await bot.wait_until_ready()
+
+    #get guilds
+    for guild in bot.guilds:
+        print(f"Connected to guild '{guild.name}'")
+        reminder_channels.append({"guild" : guild, "channel" : get(guild.channels, name='general')})
+        
     print("\nReady.")
+
+@bot.command(name="p")
+async def progress(ctx):
+    await ctx.channel.send(progress_string)
+
+@bot.command(name="pm")
+async def pingpong(ctx, name):
+    await ctx.guild.get_member_named(name).send(progress_string)
+
+@bot.command(name="pmid")
+async def pingpong_id(ctx, id : int):
+    await ctx.guild.get_member(id).send(progress_string)
     
+@bot.command(name="members")
+async def show_members(ctx):
+    message = 'Members: \n'
+
+    for member in ctx.guild.members:
+        member_string = member.name + f' ({member.id})\n'
+        message += member_string
+
+    print("Displaying Members:\n" + message)
+
+    await ctx.channel.send(message)
+
 @bot.command(name="toggle")
 async def toggle_reminders(ctx):
     print(f"Got channel {ctx.channel}")
-    if called_once_a_day.is_running():
-        called_once_a_day.cancel()
+    if hows_the_progress.is_running():
+        hows_the_progress.cancel()
         print("Reminders disabled.")
         await ctx.channel.send("Progress reminders are now off.")
     else:
-        called_once_a_day.start()
+        hows_the_progress.start()
         print("Reminders enabled.")
         await ctx.channel.send("Progress reminders are now on.")
 
@@ -87,8 +119,6 @@ async def set_reminder_channel(ctx, channel_name=None):
     else:
         print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
         await channel.send(f"Reminders have been set to Channel #{message_channel.name}.")
-    
 
-    
-called_once_a_day.start()
+hows_the_progress.start()
 bot.run(TOKEN)
