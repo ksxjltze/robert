@@ -44,7 +44,7 @@ async def hows_the_progress():
     for reminder in reminder_channels:        
         message_channel = reminder["channel"]
         print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name}.")
-        #await message_channel.send(progress_string)
+        await message_channel.send(progress_string)
 
 @hows_the_progress.before_loop
 async def before():
