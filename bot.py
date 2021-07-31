@@ -1,7 +1,7 @@
 # bot.py
 import os
 import asyncio
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, time, date, timedelta, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -14,7 +14,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='/', intents = intents)
+bot = commands.Bot(command_prefix='$', intents = intents)
 timezone = timezone(timedelta(hours=8))
 delay = timedelta(0, 0)
 hour_interval = 2
@@ -56,6 +56,24 @@ async def before():
         reminder_channels.append({"guild" : guild, "channel" : get(guild.channels, name='general')})
         
     print("\nReady.")
+
+@bot.command(name="when")
+async def when_progress(ctx):
+    await ctx.channel.send(hows_the_progress.next_iteration)
+
+def split_timedelta(time):
+    hours = time.total_seconds()//3600
+    minutes = (time.total_seconds()//60) % 60
+    seconds = round(time.total_seconds() - hours * 3600 - minutes * 60)
+
+    return {"hours":int(hours), "minutes":int(minutes), "seconds":seconds}
+
+@bot.command(name="howlong")
+async def how_long_until_progress(ctx):
+    time_next = hows_the_progress.next_iteration - datetime.now(tz=timezone)
+    time_next = split_timedelta(time_next)
+    
+    await ctx.channel.send(f'{time_next["hours"]} hours, {time_next["minutes"]} minutes, {time_next["seconds"]} seconds.')
 
 @bot.command(name="p")
 async def progress(ctx):
