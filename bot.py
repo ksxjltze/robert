@@ -132,7 +132,7 @@ async def toggle_reminders(ctx):
     guild["enabled"] = not guild["enabled"]
 
     is_enabled = guild["enabled"]
-    print(f"Guild {guild['guild']} - {guild['channel']} reminders: {is_enabled}")
+    print(f"Guild {guild['guild']} #{guild['channel']} - reminders: {is_enabled}")
 
     if robert_guilds[ctx.guild.id]["enabled"]:
         await ctx.channel.send("Progress reminders are now on.")
