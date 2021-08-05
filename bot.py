@@ -17,16 +17,20 @@ intents.members = True
 bot = commands.Bot(command_prefix='$', intents = intents)
 timezone = timezone(timedelta(hours=8))
 delay = timedelta(0, 0)
-hour_interval = 2
+hour_interval = 4
+seconds_interval = 0
+minutes_interval = 0
+
+first = True
 
 progress_string = "How's the progress over here?"
 
 the_time = datetime.now(tz=timezone)
 #reminder_time = datetime(the_time.year, the_time.month, the_time.day, 20, 55, 0, 0, timezone)
 
-reminder_channels = []
+robert_guilds = {}
 
-@tasks.loop(hours = hour_interval)
+@tasks.loop(seconds = seconds_interval, minutes = minutes_interval, hours = hour_interval)
 async def hows_the_progress():
     current_time = datetime.now(tz=timezone)
     reminder_time = current_time + delay
@@ -41,10 +45,11 @@ async def hows_the_progress():
     print("Waiting for {0:.0f} hours, {1:.0f} minutes, {2} seconds.".format(hours, minutes, seconds))
 
     await asyncio.sleep(time_until_reminder.total_seconds())
-    for reminder in reminder_channels:        
-        message_channel = reminder["channel"]
-        print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name}.")
-        await message_channel.send(progress_string)
+    for guild_id, guild in robert_guilds.items():
+        if guild["enabled"]:
+            message_channel = guild["channel"]
+            print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name} ({guild_id}).")
+            await message_channel.send(progress_string)
 
 @hows_the_progress.before_loop
 async def before():
@@ -53,7 +58,10 @@ async def before():
     #get guilds
     for guild in bot.guilds:
         print(f"Connected to guild '{guild.name}'")
-        reminder_channels.append({"guild" : guild, "channel" : get(guild.channels, name='general')})
+
+        if guild.id not in robert_guilds:
+            guild_channel = {"guild" : guild, "channel" : get(guild.channels, name='general'), "enabled" : False}
+            robert_guilds[guild.id] = guild_channel
         
     print("\nReady.")
 
@@ -84,8 +92,13 @@ async def pingpong(ctx, name):
     await ctx.guild.get_member_named(name).send(progress_string)
 
 @bot.command(name="pmid")
-async def pingpong_id(ctx, id : int):
-    await ctx.guild.get_member(id).send(progress_string)
+async def pingpong_id(ctx, id : int, msg : str):
+    await bot.fetch_user(id).send(msg)
+
+@bot.command(name="restart")
+async def test_progress(ctx):
+    hows_the_progress.restart()
+    await ctx.channel.send("Restarting PROGRESS")
     
 @bot.command(name="members")
 async def show_members(ctx):
@@ -102,41 +115,32 @@ async def show_members(ctx):
 @bot.command(name="toggle")
 async def toggle_reminders(ctx):
     print(f"Got channel {ctx.channel}")
-    if hows_the_progress.is_running():
-        hows_the_progress.cancel()
-        print("Reminders disabled.")
-        await ctx.channel.send("Progress reminders are now off.")
-    else:
-        hows_the_progress.start()
-        print("Reminders enabled.")
+
+    guild = robert_guilds[ctx.guild.id]
+    guild["enabled"] = not guild["enabled"]
+
+    is_enabled = guild["enabled"]
+    print(f"Progress is {is_enabled}")
+    if robert_guilds[ctx.guild.id]["enabled"]:
         await ctx.channel.send("Progress reminders are now on.")
+    else:
+        await ctx.channel.send("Progress reminders are now off.")
 
 @bot.command(name="setchannel")
 async def set_reminder_channel(ctx, channel_name=None):
     if channel_name is None:
         message_channel = ctx.channel
     else:
-        for channel in ctx.guild.channels:
-            if (channel.name == channel_name):
-                message_channel = channel
-    
-    for rc in reminder_channels:
-        if (rc["guild"] == ctx.guild):
-            rc["channel"] = message_channel
-            reminder = rc
-            break
+        message_channel = robert_guilds[ctx.guild.id]["channel"]
 
-    #Check guild and channel
+    reminder = robert_guilds[ctx.guild.id]
     guild = reminder["guild"]
     channel = reminder["channel"]
 
-    if (channel.id != message_channel.id):
-        err_msg = "SUMTING WONG"
-        print(err_msg)
-        await channel.send(err_msg)
-    else:
-        print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
-        await channel.send(f"Reminders have been set to Channel #{message_channel.name}.")
+    channel = message_channel
+
+    print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
+    await ctx.channel.send(f"Reminders have been set to Channel #{message_channel.name}.")
 
 hows_the_progress.start()
 bot.run(TOKEN)
