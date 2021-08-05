@@ -21,8 +21,6 @@ hour_interval = 4
 seconds_interval = 0
 minutes_interval = 0
 
-first = True
-
 progress_string = "How's the progress over here?"
 
 the_time = datetime.now(tz=timezone)
@@ -32,19 +30,6 @@ robert_guilds = {}
 
 @tasks.loop(seconds = seconds_interval, minutes = minutes_interval, hours = hour_interval)
 async def hows_the_progress():
-    current_time = datetime.now(tz=timezone)
-    reminder_time = current_time + delay
-    time_until_reminder = reminder_time - current_time
-
-    hours = time_until_reminder.total_seconds()//3600
-    minutes = (time_until_reminder.total_seconds()//60) % 60
-    seconds = round(time_until_reminder.total_seconds() - hours * 3600 - minutes * 60)
-
-    print("Reminder Set.")
-    print(f"Current Time: {current_time}")
-    print("Waiting for {0:.0f} hours, {1:.0f} minutes, {2} seconds.".format(hours, minutes, seconds))
-
-    await asyncio.sleep(time_until_reminder.total_seconds())
     for guild_id, guild in robert_guilds.items():
         if guild["enabled"]:
             message_channel = guild["channel"]
