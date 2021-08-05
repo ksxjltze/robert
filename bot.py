@@ -81,6 +81,10 @@ async def pingpong_id(ctx, id : int, msg = progress_string):
     user =  await bot.fetch_user(id)
     await user.send(msg)
 
+    ret_msg = f"Sent message '{msg}' to user {user.name}"
+    print(ret_msg)
+    await ctx.channel.send(ret_msg)
+
 @bot.command(name="restart")
 async def test_progress(ctx):
     hows_the_progress.restart()
