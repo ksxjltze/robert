@@ -141,19 +141,36 @@ async def toggle_reminders(ctx):
 
 @bot.command(name="setchannel")
 async def set_reminder_channel(ctx, channel_name=None):
-    if channel_name is None:
-        message_channel = ctx.channel
-    else:
-        message_channel = robert_guilds[ctx.guild.id]["channel"]
+    message_channel = ctx.channel
+    msg = ''
+
+    if channel_name is not None:
+        try:
+            ch = ctx.guild.get_channel(int(channel_name)) #get by id
+            found = False
+
+            if ch is not None:
+                message_channel = ch
+                found = True
+        except:
+            guild_channels = await ctx.guild.fetch_channels()
+            for gc in guild_channels:
+                if gc.name == channel_name:
+                    message_channel = gc
+                    found = True
+                    break
+        
+        if not found:
+            msg = "Channel not found."
 
     reminder = robert_guilds[ctx.guild.id]
     guild = reminder["guild"]
-    channel = reminder["channel"]
 
     reminder["channel"] = message_channel
+    channel = reminder["channel"]
 
     print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
-    await ctx.channel.send(f"Reminders have been set to Channel #{channel.name}.")
+    await ctx.channel.send(msg + f"\nReminders have been set to Channel #{channel.name}.")
 
 hows_the_progress.start()
 bot.run(TOKEN)
