@@ -33,7 +33,7 @@ async def hows_the_progress():
     for guild_id, guild in robert_guilds.items():
         if guild["enabled"]:
             message_channel = guild["channel"]
-            print(f"Reminder Sent to channel {message_channel.name} of {message_channel.guild.name} ({guild_id}).")
+            print(f"Reminder Sent to channel #{message_channel.name} of {message_channel.guild.name} ({guild_id}).")
             await message_channel.send(progress_string)
 
 @hows_the_progress.before_loop
@@ -45,6 +45,7 @@ async def before():
         print(f"Connected to guild '{guild.name}'")
 
         if guild.id not in robert_guilds:
+            print(f"Registering guild {guild.name} ({guild.id}, setting channel to #general)")
             guild_channel = {"guild" : guild, "channel" : get(guild.channels, name='general'), "enabled" : False}
             robert_guilds[guild.id] = guild_channel
         
@@ -127,10 +128,10 @@ async def set_reminder_channel(ctx, channel_name=None):
     guild = reminder["guild"]
     channel = reminder["channel"]
 
-    channel = message_channel
+    reminder["channel"] = message_channel
 
     print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
-    await ctx.channel.send(f"Reminders have been set to Channel #{message_channel.name}.")
+    await ctx.channel.send(f"Reminders have been set to Channel #{channel.name}.")
 
 hows_the_progress.start()
 bot.run(TOKEN)
