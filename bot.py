@@ -17,9 +17,12 @@ intents.members = True
 bot = commands.Bot(command_prefix='$', intents = intents)
 timezone = timezone(timedelta(hours=8))
 
-hour_interval = 4
 seconds_interval = 0
 minutes_interval = 0
+hour_interval = 4
+
+#seconds, minutes, hours
+default_interval = [0, 0, 4]
 
 progress_string = "How's the progress over here?"
 
@@ -69,6 +72,24 @@ async def how_long_until_progress(ctx):
     
     await ctx.channel.send(f'{time_next["hours"]} hours, {time_next["minutes"]} minutes, {time_next["seconds"]} seconds.')
 
+#not tested
+#TODO: isolate for each server
+@bot.command(name="setinterval")
+async def set_progress_interval(ctx, seconds = -1, minutes = 0, hours = 0):
+
+    #default interval
+    if (seconds < 0):
+        second_interval = default_interval[0]
+        minute_interval = default_interval[1]
+        hour_interval = default_interval[2]
+    else:
+        second_interval = seconds
+        minute_interval = minutes
+        hour_interval = hours
+
+    await  ctx.channel.send(f'Set interval to {hour_interval} hours, {minute_interval} minutes, {second_interval} seconds.')
+
+
 @bot.command(name="p")
 async def progress(ctx):
     await ctx.channel.send(progress_string)
@@ -111,7 +132,8 @@ async def toggle_reminders(ctx):
     guild["enabled"] = not guild["enabled"]
 
     is_enabled = guild["enabled"]
-    print(f"Progress is {is_enabled}")
+    print(f"Guild {guild['guild']} - {guild['channel']} reminders: {is_enabled}")
+
     if robert_guilds[ctx.guild.id]["enabled"]:
         await ctx.channel.send("Progress reminders are now on.")
     else:
