@@ -77,8 +77,9 @@ async def pingpong(ctx, name):
     await ctx.guild.get_member_named(name).send(progress_string)
 
 @bot.command(name="pmid")
-async def pingpong_id(ctx, id : int, msg : str):
-    await bot.fetch_user(id).send(msg)
+async def pingpong_id(ctx, id : int, msg = progress_string):
+    user =  await bot.fetch_user(id)
+    await user.send(msg)
 
 @bot.command(name="restart")
 async def test_progress(ctx):
