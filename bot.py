@@ -16,7 +16,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='$', intents = intents)
 timezone = timezone(timedelta(hours=8))
-delay = timedelta(0, 0)
+
 hour_interval = 4
 seconds_interval = 0
 minutes_interval = 0
