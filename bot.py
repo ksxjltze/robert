@@ -107,6 +107,18 @@ async def pingpong_id(ctx, id : int, msg = progress_string):
     print(ret_msg)
     await ctx.channel.send(ret_msg)
 
+@bot.command(name="see")
+async def see_message(ctx, id, count = 1):
+    ret_msg = ''
+
+    user =  await bot.fetch_user(id)
+    messages = await user.history(limit = count).flatten()
+
+    for message in reversed(messages):
+        ret_msg += message.author.name + ': ' + message.content + '\n'
+
+    await ctx.channel.send(ret_msg)
+
 @bot.command(name="restart")
 async def test_progress(ctx):
     hows_the_progress.restart()
