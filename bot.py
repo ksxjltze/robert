@@ -31,23 +31,15 @@ the_time = datetime.now(tz=timezone)
 
 robert_guilds = {}
 
-class Progress(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self._last_member = None
+#Helpers
+def split_timedelta(time):
+    hours = time.total_seconds()//3600
+    minutes = (time.total_seconds()//60) % 60
+    seconds = round(time.total_seconds() - hours * 3600 - minutes * 60)
 
-    #cog test
-    @commands.command()
-    async def hello(self, ctx, *, member: discord.Member = None):
-        """Says hello"""
-        member = member or ctx.author
-        if self._last_member is None or self._last_member.id != member.id:
-            await ctx.send('Hello {0.name}~'.format(member))
-        else:
-            await ctx.send('Hello {0.name}... This feels familiar.'.format(member))
-        self._last_member = member
+    return {"hours":int(hours), "minutes":int(minutes), "seconds":seconds}
 
-
+#Tasks
 @tasks.loop(seconds = seconds_interval, minutes = minutes_interval, hours = hour_interval)
 async def hows_the_progress():
     for guild_id, guild in robert_guilds.items():
@@ -71,45 +63,59 @@ async def before():
         
     print("\nReady.")
 
-@bot.command(name="when")
-async def when_progress(ctx):
-    await ctx.channel.send(hows_the_progress.next_iteration)
 
-def split_timedelta(time):
-    hours = time.total_seconds()//3600
-    minutes = (time.total_seconds()//60) % 60
-    seconds = round(time.total_seconds() - hours * 3600 - minutes * 60)
+class Progress(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self._last_member = None
 
-    return {"hours":int(hours), "minutes":int(minutes), "seconds":seconds}
+    #cog test
+    @commands.command(name = "hello")
+    async def hello(self, ctx, *, member: discord.Member = None):
+        """Says hello"""
+        member = member or ctx.author
+        if self._last_member is None or self._last_member.id != member.id:
+            await ctx.send('Hello {0.name}~'.format(member))
+        else:
+            await ctx.send('Hello {0.name}... This feels familiar.'.format(member))
+        self._last_member = member
 
-@bot.command(name="howlong")
-async def how_long_until_progress(ctx):
-    time_next = hows_the_progress.next_iteration - datetime.now(tz=timezone)
-    time_next = split_timedelta(time_next)
-    
-    await ctx.channel.send(f'{time_next["hours"]} hours, {time_next["minutes"]} minutes, {time_next["seconds"]} seconds.')
+    @commands.command(name="when")
+    async def when_progress(self, ctx):
+        await ctx.channel.send(hows_the_progress.next_iteration)
 
-#not tested
-#TODO: isolate for each server
-@bot.command(name="setinterval")
-async def set_progress_interval(ctx, seconds = -1, minutes = 0, hours = 0):
+    @commands.command(name="p")
+    async def progress(self, ctx):
+        await ctx.channel.send(progress_string)
 
-    #default interval
-    if (seconds < 0):
-        second_interval = default_interval[0]
-        minute_interval = default_interval[1]
-        hour_interval = default_interval[2]
-    else:
-        second_interval = seconds
-        minute_interval = minutes
-        hour_interval = hours
+    @commands.command(name="howlong")
+    async def how_long_until_progress(self, ctx):
+        time_next = hows_the_progress.next_iteration - datetime.now(tz=timezone)
+        time_next = split_timedelta(time_next)
+        
+        await ctx.channel.send(f'{time_next["hours"]} hours, {time_next["minutes"]} minutes, {time_next["seconds"]} seconds.')
 
-    await  ctx.channel.send(f'Set interval to {hour_interval} hours, {minute_interval} minutes, {second_interval} seconds.')
+    #not tested
+    #TODO: isolate for each server
+    @commands.command(name="setinterval")
+    async def set_progress_interval(self, ctx, seconds = -1, minutes = 0, hours = 0):
+        #default interval
+        if (seconds < 0):
+            second_interval = default_interval[0]
+            minute_interval = default_interval[1]
+            hour_interval = default_interval[2]
+        else:
+            second_interval = seconds
+            minute_interval = minutes
+            hour_interval = hours
 
+        hows_the_progress.change_interval(second_interval, minute_interval, hour_interval)
+        await  ctx.channel.send(f'Set interval to {hour_interval} hours, {minute_interval} minutes, {second_interval} seconds.')
 
-@bot.command(name="p")
-async def progress(ctx):
-    await ctx.channel.send(progress_string)
+    @commands.command(name="restart")
+    async def test_progress(self, ctx):
+        hows_the_progress.restart()
+        await ctx.channel.send("Restarting PROGRESS")
 
 @bot.command(name="pm")
 async def pingpong(ctx, name):
@@ -135,11 +141,6 @@ async def see_message(ctx, id, count = 1):
         ret_msg += message.author.name + ': ' + message.content + '\n'
 
     await ctx.channel.send(ret_msg)
-
-@bot.command(name="restart")
-async def test_progress(ctx):
-    hows_the_progress.restart()
-    await ctx.channel.send("Restarting PROGRESS")
     
 @bot.command(name="members")
 async def show_members(ctx):
@@ -202,4 +203,5 @@ async def set_reminder_channel(ctx, channel_name=None):
     await ctx.channel.send(msg + f"\nReminders have been set to Channel #{channel.name}.")
 
 hows_the_progress.start()
+bot.add_cog(Progress(bot))
 bot.run(TOKEN)
