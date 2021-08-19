@@ -13,6 +13,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
 intents.members = True
+intents.reactions = True
 
 bot = commands.Bot(command_prefix='$', intents = intents)
 
@@ -225,6 +226,16 @@ class ServerUtils(commands.Cog, name = "Server Utilities"):
         print("Displaying Members:\n" + message)
 
         await ctx.channel.send(message)
+
+class ProgressGame(commands.Cog, name = "Idle Game"):
+    @commands.command(name="profile", brief="Displays your PROGRESS profile")
+    async def show_profile(self, ctx):
+        await ctx.channel.send("WIP")
+
+#Events
+@bot.event
+async def on_reaction_add(reaction, user):
+    await user.send("PROGRESS")
 
 hows_the_progress.start()
 bot.add_cog(Progress(bot))
