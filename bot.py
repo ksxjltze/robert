@@ -15,8 +15,11 @@ intents = discord.Intents.default()
 intents.members = True
 
 bot = commands.Bot(command_prefix='$', intents = intents)
+
+#Singapore Time
 timezone = timezone(timedelta(hours=8))
 
+#Initial Reminder Interval
 seconds_interval = 0
 minutes_interval = 0
 hour_interval = 4
@@ -24,10 +27,12 @@ hour_interval = 4
 #seconds, minutes, hours
 default_interval = [0, 0, 4]
 
-progress_string = "How's the progress over here?"
+#Interval constraints
+minimum_second_interval = 5
+minimum_minute_interval = 1
 
-the_time = datetime.now(tz=timezone)
-#reminder_time = datetime(the_time.year, the_time.month, the_time.day, 20, 55, 0, 0, timezone)
+#Reminder default string
+progress_string = "How's the progress over here?"
 
 robert_guilds = {}
 
@@ -97,10 +102,15 @@ class Progress(commands.Cog, name = "How to Progress"):
 
     #not tested
     #TODO: isolate for each server
-    @commands.command(name="setinterval", brief="Sets the progress reminder interval.")
-    async def set_progress_interval(self, ctx, seconds = -1, minutes = 0, hours = 0):
+    @commands.command(name="setinterval", brief="Sets the progress reminder interval (Hours, Minutes, Seconds).", 
+    help=
+    "Sets the progress reminder interval (Seconds, Minutes, Hours).\n"
+    "NOTE: Only applies after current reminder has been sent.\n"
+    "Enter no arguments to reset to default interval.\n"
+    "Minutes and seconds arguments can be omitted - e.g. '$setinterval 5' will set the interval to 5 hours.")
+    async def set_progress_interval(self, ctx, hours = -1, minutes =0, seconds = 0):
         #default interval
-        if (seconds < 0):
+        if (hours < 0):
             second_interval = default_interval[0]
             minute_interval = default_interval[1]
             hour_interval = default_interval[2]
@@ -109,7 +119,13 @@ class Progress(commands.Cog, name = "How to Progress"):
             minute_interval = minutes
             hour_interval = hours
 
-        hows_the_progress.change_interval(second_interval, minute_interval, hour_interval)
+        if hour_interval == 0:
+            if minute_interval == 0:
+                second_interval = max(minimum_second_interval, second_interval)
+            else:
+                minute_interval = max(minimum_minute_interval, minute_interval)
+
+        hows_the_progress.change_interval(seconds=second_interval, minutes=minute_interval, hours=hour_interval)
         await  ctx.channel.send(f'Set interval to {hour_interval} hours, {minute_interval} minutes, {second_interval} seconds.')
 
     @commands.command(name="restart", brief="Restarts the progress reminder task.")
