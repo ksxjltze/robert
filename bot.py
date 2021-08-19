@@ -64,7 +64,7 @@ async def before():
     print("\nReady.")
 
 
-class Progress(commands.Cog):
+class Progress(commands.Cog, name = "How to Progress"):
     def __init__(self, bot):
         self.bot = bot
         self._last_member = None
@@ -117,91 +117,101 @@ class Progress(commands.Cog):
         hows_the_progress.restart()
         await ctx.channel.send("Restarting PROGRESS")
 
-@bot.command(name="pm")
-async def pingpong(ctx, name):
-    await ctx.guild.get_member_named(name).send(progress_string)
 
-@bot.command(name="pmid")
-async def pingpong_id(ctx, id : int, msg = progress_string):
-    user =  await bot.fetch_user(id)
-    await user.send(msg)
+    @commands.command(name="toggle")
+    async def toggle_reminders(self, ctx):
+        print(f"Got channel {ctx.channel}")
 
-    ret_msg = f"Sent message '{msg}' to user {user.name}"
-    print(ret_msg)
-    await ctx.channel.send(ret_msg)
+        guild = robert_guilds[ctx.guild.id]
+        guild["enabled"] = not guild["enabled"]
 
-@bot.command(name="see")
-async def see_message(ctx, id, count = 1):
-    ret_msg = ''
+        is_enabled = guild["enabled"]
+        print(f"Guild {guild['guild']} #{guild['channel']} - reminders: {is_enabled}")
 
-    user =  await bot.fetch_user(id)
-    messages = await user.history(limit = count).flatten()
+        if robert_guilds[ctx.guild.id]["enabled"]:
+            await ctx.channel.send("Progress reminders are now on.")
+        else:
+            await ctx.channel.send("Progress reminders are now off.")
 
-    for message in reversed(messages):
-        ret_msg += message.author.name + ': ' + message.content + '\n'
+    @commands.command(name="setchannel")
+    async def set_reminder_channel(self, ctx, channel_name=None):
+        message_channel = ctx.channel
+        msg = ''
 
-    await ctx.channel.send(ret_msg)
-    
-@bot.command(name="members")
-async def show_members(ctx):
-    message = 'Members: \n'
+        if channel_name is not None:
+            try:
+                ch = ctx.guild.get_channel(int(channel_name)) #get by id
+                found = False
 
-    for member in ctx.guild.members:
-        member_string = member.name + f' ({member.id})\n'
-        message += member_string
-
-    print("Displaying Members:\n" + message)
-
-    await ctx.channel.send(message)
-
-@bot.command(name="toggle")
-async def toggle_reminders(ctx):
-    print(f"Got channel {ctx.channel}")
-
-    guild = robert_guilds[ctx.guild.id]
-    guild["enabled"] = not guild["enabled"]
-
-    is_enabled = guild["enabled"]
-    print(f"Guild {guild['guild']} #{guild['channel']} - reminders: {is_enabled}")
-
-    if robert_guilds[ctx.guild.id]["enabled"]:
-        await ctx.channel.send("Progress reminders are now on.")
-    else:
-        await ctx.channel.send("Progress reminders are now off.")
-
-@bot.command(name="setchannel")
-async def set_reminder_channel(ctx, channel_name=None):
-    message_channel = ctx.channel
-    msg = ''
-
-    if channel_name is not None:
-        try:
-            ch = ctx.guild.get_channel(int(channel_name)) #get by id
-            found = False
-
-            if ch is not None:
-                message_channel = ch
-                found = True
-        except:
-            guild_channels = await ctx.guild.fetch_channels()
-            for gc in guild_channels:
-                if gc.name == channel_name:
-                    message_channel = gc
+                if ch is not None:
+                    message_channel = ch
                     found = True
-                    break
-        
-        if not found:
-            msg = "Channel not found."
+            except:
+                guild_channels = await ctx.guild.fetch_channels()
+                for gc in guild_channels:
+                    if gc.name == channel_name:
+                        message_channel = gc
+                        found = True
+                        break
+            
+            if not found:
+                msg = "Channel not found."
 
-    reminder = robert_guilds[ctx.guild.id]
-    guild = reminder["guild"]
+        reminder = robert_guilds[ctx.guild.id]
+        guild = reminder["guild"]
 
-    reminder["channel"] = message_channel
-    channel = reminder["channel"]
+        reminder["channel"] = message_channel
+        channel = reminder["channel"]
 
-    print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
-    await ctx.channel.send(msg + f"\nReminders have been set to Channel #{channel.name}.")
+        print(f"Target channel for guild '{guild.name}' changed to #{channel.name} (id: {channel.id})")
+        await ctx.channel.send(msg + f"\nReminders have been set to Channel #{channel.name}.")
+
+
+class Messager(commands.Cog, name = "Messaging"):
+    def __init__(self, bot):
+        self.bot = bot
+        self._last_member = None
+
+    @commands.command(name="pm")
+    async def pingpong(self, ctx, name):
+        await ctx.guild.get_member_named(name).send(progress_string)
+
+    @commands.command(name="pmid")
+    async def pingpong_id(self, ctx, id : int, msg = progress_string):
+        user =  await bot.fetch_user(id)
+        await user.send(msg)
+
+        ret_msg = f"Sent message '{msg}' to user {user.name}"
+        print(ret_msg)
+        await ctx.channel.send(ret_msg)
+
+    @commands.command(name="see")
+    async def see_message(self, ctx, id, count = 1):
+        ret_msg = ''
+
+        user =  await bot.fetch_user(id)
+        messages = await user.history(limit = count).flatten()
+
+        for message in reversed(messages):
+            ret_msg += message.author.name + ': ' + message.content + '\n'
+
+        await ctx.channel.send(ret_msg)
+    
+class ServerUtils(commands.Cog, name = "Server Utilities"):
+    @commands.command(name="members")
+    async def show_members(self, ctx):
+        message = 'Members: \n'
+
+        for member in ctx.guild.members:
+            member_string = member.name + f' ({member.id})\n'
+            message += member_string
+
+        print("Displaying Members:\n" + message)
+
+        await ctx.channel.send(message)
 
 hows_the_progress.start()
 bot.add_cog(Progress(bot))
+bot.add_cog(Messager(bot))
+bot.add_cog(ServerUtils(bot))
 bot.run(TOKEN)
