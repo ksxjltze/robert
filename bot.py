@@ -80,15 +80,15 @@ class Progress(commands.Cog, name = "How to Progress"):
             await ctx.send('Hello {0.name}... This feels familiar.'.format(member))
         self._last_member = member
 
-    @commands.command(name="when")
+    @commands.command(name="when", brief="Displays the time of the next progress reminder.")
     async def when_progress(self, ctx):
         await ctx.channel.send(hows_the_progress.next_iteration)
 
-    @commands.command(name="p")
+    @commands.command(name="p", brief="INSTANT PROGRESS.")
     async def progress(self, ctx):
         await ctx.channel.send(progress_string)
 
-    @commands.command(name="howlong")
+    @commands.command(name="howlong", brief="Displays the time until next progress reminder.")
     async def how_long_until_progress(self, ctx):
         time_next = hows_the_progress.next_iteration - datetime.now(tz=timezone)
         time_next = split_timedelta(time_next)
@@ -97,7 +97,7 @@ class Progress(commands.Cog, name = "How to Progress"):
 
     #not tested
     #TODO: isolate for each server
-    @commands.command(name="setinterval")
+    @commands.command(name="setinterval", brief="Sets the progress reminder interval.")
     async def set_progress_interval(self, ctx, seconds = -1, minutes = 0, hours = 0):
         #default interval
         if (seconds < 0):
@@ -112,13 +112,13 @@ class Progress(commands.Cog, name = "How to Progress"):
         hows_the_progress.change_interval(second_interval, minute_interval, hour_interval)
         await  ctx.channel.send(f'Set interval to {hour_interval} hours, {minute_interval} minutes, {second_interval} seconds.')
 
-    @commands.command(name="restart")
+    @commands.command(name="restart", brief="Restarts the progress reminder task.")
     async def test_progress(self, ctx):
         hows_the_progress.restart()
         await ctx.channel.send("Restarting PROGRESS")
 
 
-    @commands.command(name="toggle")
+    @commands.command(name="toggle", brief="Toggles progress reminders.")
     async def toggle_reminders(self, ctx):
         print(f"Got channel {ctx.channel}")
 
@@ -133,7 +133,7 @@ class Progress(commands.Cog, name = "How to Progress"):
         else:
             await ctx.channel.send("Progress reminders are now off.")
 
-    @commands.command(name="setchannel")
+    @commands.command(name="setchannel", brief="Sets the reminder channel.")
     async def set_reminder_channel(self, ctx, channel_name=None):
         message_channel = ctx.channel
         msg = ''
@@ -172,11 +172,11 @@ class Messager(commands.Cog, name = "Messaging"):
         self.bot = bot
         self._last_member = None
 
-    @commands.command(name="pm")
+    @commands.command(name="pm", brief="Sends a message to a specified user.")
     async def pingpong(self, ctx, name):
         await ctx.guild.get_member_named(name).send(progress_string)
 
-    @commands.command(name="pmid")
+    @commands.command(name="pmid", brief="Sends a message to a specified user, using their discord id.")
     async def pingpong_id(self, ctx, id : int, msg = progress_string):
         user =  await bot.fetch_user(id)
         await user.send(msg)
@@ -185,7 +185,7 @@ class Messager(commands.Cog, name = "Messaging"):
         print(ret_msg)
         await ctx.channel.send(ret_msg)
 
-    @commands.command(name="see")
+    @commands.command(name="see", brief="Sees the message history between a user (id) and Robert Surov.")
     async def see_message(self, ctx, id, count = 1):
         ret_msg = ''
 
@@ -198,7 +198,7 @@ class Messager(commands.Cog, name = "Messaging"):
         await ctx.channel.send(ret_msg)
     
 class ServerUtils(commands.Cog, name = "Server Utilities"):
-    @commands.command(name="members")
+    @commands.command(name="members", brief="Displays the members of the current server." )
     async def show_members(self, ctx):
         message = 'Members: \n'
 
