@@ -235,7 +235,9 @@ class ProgressGame(commands.Cog, name = "Idle Game"):
 #Events
 @bot.event
 async def on_reaction_add(reaction, user):
-    await user.send("PROGRESS")
+    #Check if correct channel (Reminder channel)
+    if (reaction.message.channel == robert_guilds[reaction.message.guild.id]["channel"]):
+      await user.send("PROGRESS")
 
 hows_the_progress.start()
 bot.add_cog(Progress(bot))
